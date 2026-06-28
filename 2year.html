@@ -1,0 +1,703 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>2 Years ❤️</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Fredoka:wght=600;700&display=swap');
+
+        :root {
+            --matcha-green: #b8c6b1;
+            --matcha-dark: #445241;
+            --strawberry-pink: #ffcad4;
+            --strawberry-dark: #fb6f92;
+            --cream: #fffdf9;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        body, html {
+            width: 100%;
+            height: 100%;
+            background-color: #1a1c19;
+            font-family: 'Fredoka', sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+        }
+
+        .game-container {
+            width: 100%;
+            max-width: 440px;
+            height: 94vh;
+            max-height: 780px;
+            background: #fff;
+            border: 6px solid var(--matcha-dark);
+            border-radius: 36px;
+            box-shadow: 0 25px 60px rgba(0,0,0,0.5);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .viewport {
+            flex: 1;
+            position: relative;
+            background: linear-gradient(to bottom, #ffccd5 0%, #ffe5ec 40%, #fff0f3 75%, #edf7eb 100%);
+        }
+
+        #gameCanvas {
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+
+        /* --- NARRATION DIALOGUE BOX SYSTEM --- */
+        .dialogue-box {
+            position: absolute;
+            top: 16px;
+            left: 16px;
+            right: 16px;
+            background: rgba(255, 253, 249, 0.95);
+            border: 3.5px solid var(--matcha-dark);
+            border-radius: 16px;
+            padding: 12px 16px;
+            font-size: 0.95rem;
+            color: var(--matcha-dark);
+            box-shadow: 0 8px 0px rgba(0,0,0,0.05);
+            z-index: 100;
+            display: none;
+            min-height: 65px;
+            line-height: 1.4;
+            cursor: pointer;
+        }
+
+        .dialogue-indicator {
+            display: block;
+            font-size: 0.75rem;
+            color: var(--strawberry-dark);
+            margin-top: 6px;
+            text-align: right;
+            font-weight: bold;
+            animation: blinker 1.2s linear infinite;
+        }
+
+        @keyframes blinker {
+            50% { opacity: 0; }
+        }
+
+        /* --- SPECIAL MESSAGE POPUP WINDOW --- */
+        .message-popup {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 85%;
+            background: var(--cream);
+            border: 4px solid var(--matcha-dark);
+            border-radius: 24px;
+            padding: 24px;
+            box-shadow: 0 20px 0px rgba(0,0,0,0.15);
+            z-index: 200;
+            display: none;
+            text-align: center;
+            animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        @keyframes popIn {
+            from { transform: translate(-50%, -40%) scale(0.9); opacity: 0; }
+            to { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+        }
+
+        .popup-close {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            width: 32px;
+            height: 32px;
+            background: var(--strawberry-pink);
+            border: 2.5px solid var(--matcha-dark);
+            border-radius: 50%;
+            font-size: 0.9rem;
+            font-weight: bold;
+            color: var(--matcha-dark);
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .popup-close:active {
+            background: var(--strawberry-dark);
+            color: white;
+        }
+
+        .popup-text {
+            color: var(--matcha-dark);
+            font-size: 1.05rem;
+            line-height: 1.5;
+            margin-top: 10px;
+        }
+
+        /* --- CONTROLLER HOUSING PANEL --- */
+        .controller-tray {
+            height: 140px;
+            background: var(--cream);
+            border-top: 4px solid var(--matcha-dark);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 20px;
+            z-index: 10;
+        }
+
+        .d-pad { display: flex; gap: 12px; }
+        .action-buttons { display: flex; gap: 12px; align-items: center; }
+
+        .btn {
+            width: 54px; height: 54px;
+            background: #ffffff;
+            border: 3px solid var(--matcha-dark);
+            border-radius: 18px;
+            font-size: 1.3rem;
+            display: flex; justify-content: center; align-items: center;
+            cursor: pointer;
+            box-shadow: 0 6px 0 var(--matcha-dark);
+            transition: all 0.05s ease;
+            color: var(--matcha-dark);
+        }
+        .btn:active { transform: translateY(4px); box-shadow: 0 2px 0 var(--matcha-dark); }
+
+        .btn-action { height: 58px; font-weight: 700; font-size: 0.95rem; border-radius: 20px; padding: 0 14px; }
+        .btn-interact { background: linear-gradient(135deg, #e3fafc 0%, #91e7f3 100%); box-shadow: 0 6px 0 #4dadb8; display: none; }
+        .btn-interact:active { box-shadow: 0 2px 0 #4dadb8; }
+
+        .btn-jump { width: 68px; height: 68px; border-radius: 50%; background: linear-gradient(135deg, var(--strawberry-pink) 0%, #ff8fab 100%); color: white; font-size: 1rem; box-shadow: 0 6px 0 #d96e83; }
+        .btn-jump:active { box-shadow: 0 2px 0 #d96e83; }
+    </style>
+</head>
+<body>
+
+    <!-- Background Music Element -->
+    <audio id="bgMusic" loop>
+        <source src="2year.mp3" type="audio/mpeg">
+    </audio>
+
+    <div class="game-container">
+        <!-- Dialogue Box -->
+        <div class="dialogue-box" id="dialogueBox">Welcome to Matcha Street! Explore the area...</div>
+        
+        <!-- Secret Message Modal Popup -->
+        <div class="message-popup" id="messagePopup">
+            <button class="popup-close" id="popupClose">X</button>
+            <div class="popup-text" id="popupText"></div>
+        </div>
+
+        <div class="viewport" id="viewport">
+            <canvas id="gameCanvas"></canvas>
+        </div>
+
+        <div class="controller-tray">
+            <div class="d-pad">
+                <div class="btn" id="btnLeft">◀</div>
+                <div class="btn" id="btnRight">▶</div>
+            </div>
+            <div class="action-buttons">
+                <div class="btn btn-action btn-interact" id="btnInteract">🖐️</div>
+                <button class="btn btn-jump" id="btnJump">⬆️</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const viewport = document.getElementById('viewport');
+        const dialogueBox = document.getElementById('dialogueBox');
+        const btnInteract = document.getElementById('btnInteract');
+        const messagePopup = document.getElementById('messagePopup');
+        const popupClose = document.getElementById('popupClose');
+        const popupText = document.getElementById('popupText');
+        const bgMusic = document.getElementById('bgMusic');
+
+        let viewW, viewH;
+        let keys = { left: false, right: false };
+
+        const gravity = 0.45;
+        const groundHeight = 50;
+        let cameraX = 0;
+        const mapLeftBoundary = 0;
+        const mapRightBoundary = 2600;
+
+        let solidObjects = [];
+        let streetProps = [];
+        let decorClouds = [];
+        let birds = [];
+
+        // --- CUSTOM SCENE SEQUENCER ---
+        let currentDialogueSequence = [];
+        let dialogueIndex = 0;
+        let isMusicPlaying = false;
+
+        // --- STORY STATE MANAGEMENT ---
+        let gameState = {
+            hasKey: false,
+            annieBuildingID: 3,        // Annie Perez lives in Building 4 (Index 3)
+            secretMessageBuildingID: 7, // Locked house with letter is Building 8 (Index 7)
+            interactedHouses: new Set(),// Tracks unique building visits
+            hasInteractedWithCat: false,
+            annieRevealed: false,
+            hasTriggeredNayanSlam: false 
+        };
+
+        let player = {
+            x: 80, y: 0, width: 28, height: 50,
+            vx: 0, vy: 0, speed: 4.2, jumpForce: -10.5,
+            isGrounded: false, facing: 'right', animCycle: 0,
+            squishX: 1, squishY: 1
+        };
+
+        let cat = {
+            x: 1850, y: 0, width: 26, height: 24,
+            vx: 0, vy: 0, facing: 'left',
+            isFollowing: false, animCycle: 0,
+            targetDistance: 38, showHeart: 0
+        };
+
+        let activeInteractTarget = null;
+        let dialogueTimeout = null;
+
+        // One-liner texts for the other 8 houses
+        const backgroundHouseTexts = {
+            0: "<b>Me:</b> wow adobo shop but I don't wanna eat adobo rn.",
+            1: "🚪<b>Knock knock...</b><br>🧔 <b>Man:</b> \"Sorry I don't wanna buy soap, try next house.\"",
+            2: "Me:<b>Uhh it's gym</b> but my legs hurts and I'm also feeling lazy rn.",
+            4: "It's your own house silly.",
+            5: "🚪 <b>Knock knock...</b><br>🧑‍🦳 <b>Aunty:</b> \"Hairy girl ain't home.\"",
+            6: "Empty Ass house.",
+            8: "Me:<b>It's restaurant.</b> but i don't think i want pizza rn.",
+            9: "Me:<b>Knock knock...</b><br>🧑 <b>Aunty:</b> \"Alyssa sorry your jervine ain't home today, check back later.\""
+        };
+
+        function startDialogueSequence(lines) {
+            currentDialogueSequence = lines;
+            dialogueIndex = 0;
+            displayCurrentLine();
+        }
+
+        function displayCurrentLine() {
+            if (dialogueIndex < currentDialogueSequence.length) {
+                let content = currentDialogueSequence[dialogueIndex];
+                
+                // Append custom visual tap indicator if there are lines remaining, OR if it's the very first step
+                if (dialogueIndex < currentDialogueSequence.length - 1 || currentDialogueSequence.length === 1) {
+                    content += "<span class='dialogue-indicator'>[ Tap box to continue... ▽ ]</span>";
+                }
+                
+                dialogueBox.innerHTML = content;
+                dialogueBox.style.display = 'block';
+                clearTimeout(dialogueTimeout);
+                
+                // For single statements or final lines, set up an auto-fade layout escape hook
+                if (dialogueIndex === currentDialogueSequence.length - 1) {
+                    dialogueTimeout = setTimeout(() => { dialogueBox.style.display = 'none'; currentDialogueSequence = []; }, 8000);
+                }
+            } else {
+                dialogueBox.style.display = 'none';
+                currentDialogueSequence = [];
+            }
+        }
+
+        // Advance conversation by clicking/tapping straight onto the layout window
+        dialogueBox.addEventListener('click', () => {
+            // Trigger background music on the very first screen layout interaction
+            if (!isMusicPlaying) {
+                bgMusic.play().catch(e => console.log("Audio play blocked or link missing:", e));
+                isMusicPlaying = true;
+            }
+
+            if (currentDialogueSequence.length > 0) {
+                if (dialogueIndex < currentDialogueSequence.length - 1) {
+                    dialogueIndex++;
+                    displayCurrentLine();
+                } else {
+                    dialogueBox.style.display = 'none';
+                    currentDialogueSequence = [];
+                }
+            }
+        });
+
+        function initLevel() {
+            const groundY = viewH - groundHeight;
+
+            decorClouds = [];
+            for (let i = 0; i < 20; i++) {
+                decorClouds.push({ x: Math.random() * mapRightBoundary, y: Math.random() * 90 + 15, scale: Math.random() * 0.5 + 0.7 });
+            }
+
+            birds = [];
+            for (let i = 0; i < 5; i++) {
+                birds.push({ x: Math.random() * mapRightBoundary, y: Math.random() * 60 + 30, speed: Math.random() * 0.4 + 0.7, wingState: Math.random() * Math.PI });
+            }
+
+            solidObjects = [
+                { id: 0, x: 100,  y: groundY - 150, w: 140, h: 150, color: '#ffeaed', subColor: '#ff8fab', roofStyle: 'flat-awning' },
+                { id: 1, x: 260,  y: groundY - 210, w: 110, h: 210, color: '#f3e8ff', subColor: '#b39ddb', roofStyle: 'triangle' },
+                { id: 2, x: 390,  y: groundY - 130, w: 150, h: 130, color: '#e8f0e5', subColor: '#8fa886', roofStyle: 'double-tier' },
+                { id: 3, x: 560,  y: groundY - 180, w: 130, h: 180, color: '#fff9db', subColor: '#fcc419', roofStyle: 'flat-awning' }, // Annie Perez
+                { id: 4, x: 710,  y: groundY - 230, w: 160, h: 230, color: '#e3fafc', subColor: '#3bc9db', roofStyle: 'triangle' },
+                { id: 5, x: 890,  y: groundY - 140, w: 120, h: 140, color: '#fff0f6', subColor: '#faa2c1', roofStyle: 'double-tier' },
+                { id: 6, x: 1030, y: groundY - 190, w: 140, h: 190, color: '#edf2ff', subColor: '#748ffc', roofStyle: 'flat-awning' },
+                { id: 7, x: 1190, y: groundY - 220, w: 120, h: 220, color: '#f8f9fa', subColor: '#ced4da', roofStyle: 'triangle' }, // Secret Message House
+                { id: 8, x: 1330, y: groundY - 160, w: 150, h: 160, color: '#e6fcf5', subColor: '#20c997', roofStyle: 'flat-awning' },
+                { id: 9, x: 1500, y: groundY - 240, w: 170, h: 240, color: '#fff5f5', subColor: '#ff8787', roofStyle: 'double-tier' }
+            ];
+
+            streetProps = [
+                { x: 60, type: 'bench' }, { x: 245, type: 'lamp' }, { x: 375, type: 'plant' },
+                { x: 545, type: 'lamp' }, { x: 695, type: 'bench' }, { x: 875, type: 'plant' },
+                { x: 1015, type: 'lamp' }, { x: 1175, type: 'bench' }, { x: 1315, type: 'plant' },
+                { x: 1485, type: 'lamp' },
+                { x: 1730, type: 'tree', variant: 'big' }, { x: 1800, type: 'bench' }, { x: 1880, type: 'lamp' },
+                { x: 1960, type: 'tree', variant: 'small' }
+            ];
+
+            cat.y = groundY - cat.height;
+            
+            // Start welcome message as a single-item array sequence so it requires a tap to clear
+            startDialogueSequence(["<b>Ally:</b><br>Ugh what's this ugly place now."]);
+        }
+
+        function resizeGame() {
+            viewW = canvas.width = viewport.clientWidth;
+            viewH = canvas.height = viewport.clientHeight;
+            initLevel();
+            if (!player.isGrounded) player.y = viewH - groundHeight - player.height;
+        }
+
+        // --- CORE STORY ENGINE LOGIC ---
+        function executeInteraction() {
+            if (currentDialogueSequence.length > 0) return;
+            if (!activeInteractTarget) return;
+
+            if (activeInteractTarget.type === 'cat') {
+                cat.isFollowing = true;
+                cat.showHeart = 120;
+                gameState.hasInteractedWithCat = true;
+                startDialogueSequence([
+                    "<b>Ally:</b> \"Aww what a cute kitty!\"",
+                    "<b>Nally:</b> \"meow meow nigga\""
+                ]);
+            } 
+            else if (activeInteractTarget.type === 'door') {
+                const bID = activeInteractTarget.id;
+                gameState.interactedHouses.add(bID); 
+                
+                const totalHousesChecked = gameState.interactedHouses.size;
+                const completedInvestigation = (totalHousesChecked >= 9 && gameState.hasInteractedWithCat);
+
+                if (bID === gameState.secretMessageBuildingID) {
+                    if (gameState.hasKey) {
+                        if (!gameState.hasTriggeredNayanSlam) {
+                            gameState.hasTriggeredNayanSlam = true;
+                            startDialogueSequence([
+                                "🔑 <i>*Click, unlock! Door swings open...*</i>",
+                                "<b>Ally:</b> \"Hi Nayan! Happy 2nd Anniversary!\"",
+                                "<b>Nayan:</b> \"No fuck you go away!\"",
+                                "<i>*SLAM!* The door is closed</i>"
+                            ]);
+                        } else {
+                            popupText.innerHTML = "🌷 <b>Happy 2nd Anniversary!</b> 🌷<br><br>\"ok I'm sorry for the bullshit, i won't act fake rn but I'm still happy from inside even though I don't show it properly that we spent 2 whole years together, i think that's a lot. Made this small mini game and this small message cuz it's not just random monthvesary. Yes I'm mad about lots of things that I'm finding hard to forgive but yeah i still love you. I don't wanna say lovey dovey things about what i wanna do in future i believe in present and doing the things in present so yeah for now i still do wanna fix things with you. I love you Ally.\"";
+                            messagePopup.style.display = 'block';
+                        }
+                    } else {
+                        startDialogueSequence([
+                            "🚪 <b>Knock knock...</b>",
+                            "The door is locked."
+                        ]);
+                    }
+                } 
+                else if (bID === gameState.annieBuildingID) {
+                    if (gameState.hasKey) {
+                        startDialogueSequence(["Nigga tf u want now bobo naman"]);
+                    } 
+                    else if (completedInvestigation) {
+                        gameState.hasKey = true;
+                        gameState.annieRevealed = true;
+                        startDialogueSequence([
+                            "🚪 <b>*Door Opens*</b>",
+                            "<b>???:</b> \"Sorry I lied earlier! I do know Nayan. I'm Annie Perez!\"",
+                            "<b>Annie Perez:</b> \"He gave me this key, ok bye!\"",
+                            "<i>*Click, lock!* You received the House Key!</i>"
+                        ]);
+                    } 
+                    else {
+                        startDialogueSequence([
+                            "🚪 <b>Knock knock...</b>",
+                            "<b>???:</b> \"Hi, who's this?\"",
+                            "<b>Ally:</b> \"I'm Ally, I'm finding Nayan.\"",
+                            "<b>???:</b> \"No Nayan is here.\"",
+                            "<i>*Slam!*</i>"
+                        ]);
+                    }
+                } 
+                else {
+                    if (backgroundHouseTexts[bID]) {
+                        // Background houses wrapped into single array sequences to match tracking logic smoothly
+                        startDialogueSequence([backgroundHouseTexts[bID]]);
+                    }
+                }
+            }
+        }
+
+        popupClose.addEventListener('click', () => { messagePopup.style.display = 'none'; });
+
+        // --- INPUT MATRIX ---
+        window.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') { keys.left = true; player.facing = 'left'; }
+            if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') { keys.right = true; player.facing = 'right'; }
+            if (e.key === ' ' || e.key === 'ArrowUp' || e.key === 'w') triggerJump();
+            if (e.key === 'e' || e.key === 'E' || e.key === 'Enter') executeInteraction();
+        });
+        window.addEventListener('keyup', (e) => {
+            if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') keys.left = false;
+            if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') keys.right = false;
+        });
+
+        document.getElementById('btnLeft').addEventListener('touchstart', (e) => { e.preventDefault(); keys.left = true; player.facing = 'left'; });
+        document.getElementById('btnLeft').addEventListener('touchend', () => keys.left = false);
+        document.getElementById('btnRight').addEventListener('touchstart', (e) => { e.preventDefault(); keys.right = true; player.facing = 'right'; });
+        document.getElementById('btnRight').addEventListener('touchend', () => keys.right = false);
+        document.getElementById('btnJump').addEventListener('touchstart', (e) => { e.preventDefault(); triggerJump(); });
+        btnInteract.addEventListener('touchstart', (e) => { e.preventDefault(); executeInteraction(); });
+
+        function triggerJump() {
+            if (player.isGrounded) {
+                player.vy = player.jumpForce; player.isGrounded = false;
+                player.squishX = 0.82; player.squishY = 1.25;
+            }
+        }
+
+        function updateEngine() {
+            // Freeze movement only when a dialogue text overlay box is blocking view
+            if (currentDialogueSequence.length === 0) {
+                if (keys.left) player.vx = -player.speed;
+                else if (keys.right) player.vx = player.speed;
+                else player.vx = 0;
+            } else {
+                player.vx = 0;
+            }
+
+            player.vy += gravity;
+            if (player.vx !== 0) player.animCycle += 0.18;
+
+            player.squishX += (1 - player.squishX) * 0.1;
+            player.squishY += (1 - player.squishY) * 0.1;
+
+            player.x += player.vx;
+            if (player.x < mapLeftBoundary) player.x = mapLeftBoundary;
+            if (player.x > mapRightBoundary - player.width) player.x = mapRightBoundary - player.width;
+
+            player.y += player.vy;
+            let checkGrounded = false;
+            const mainGroundY = viewH - groundHeight;
+
+            if (player.y + player.height >= mainGroundY) {
+                player.y = mainGroundY - player.height; player.vy = 0; checkGrounded = true;
+            }
+
+            solidObjects.forEach(obj => {
+                if (player.x + player.width > obj.x && player.x < obj.x + obj.w) {
+                    if (player.vy > 0 && player.y + player.height >= obj.y && player.y + player.height - player.vy <= obj.y + 12) {
+                        player.y = obj.y - player.height; player.vy = 0; checkGrounded = true;
+                    }
+                }
+            });
+
+            if (checkGrounded && !player.isGrounded) { player.squishX = 1.22; player.squishY = 0.78; }
+            player.isGrounded = checkGrounded;
+
+            birds.forEach(b => {
+                b.x -= b.speed; b.wingState += 0.15;
+                if (b.x < -40) b.x = mapRightBoundary + 40;
+            });
+
+            if (cat.isFollowing) {
+                let targetX = player.facing === 'right' ? player.x - cat.targetDistance : player.x + player.width + cat.targetDistance;
+                let catDx = targetX - cat.x;
+                if (Math.abs(catDx) > 4) {
+                    cat.vx = Math.sign(catDx) * (player.speed * 1.05);
+                    cat.facing = cat.vx > 0 ? 'right' : 'left';
+                    cat.animCycle += 0.22;
+                } else { cat.vx = 0; }
+            }
+            cat.x += cat.vx;
+            if (cat.showHeart > 0) cat.showHeart--;
+
+            let proximityTarget = null;
+            
+            if (currentDialogueSequence.length === 0) {
+                solidObjects.forEach(obj => {
+                    let doorX = obj.x + (obj.w / 2);
+                    if (Math.abs((player.x + player.width/2) - doorX) < 45 && player.y > (viewH - groundHeight - 80)) {
+                        proximityTarget = { type: 'door', id: obj.id };
+                    }
+                });
+
+                if (!gameState.hasInteractedWithCat && Math.abs((player.x + player.width/2) - (cat.x + cat.width/2)) < 55) {
+                    proximityTarget = { type: 'cat' };
+                }
+            }
+
+            activeInteractTarget = proximityTarget;
+            btnInteract.style.display = proximityTarget ? 'flex' : 'none';
+
+            cameraX += (player.x - cameraX - 140) * 0.1;
+            cameraX = Math.max(0, Math.min(cameraX, mapRightBoundary - viewW));
+        }
+
+        function drawScene() {
+            ctx.clearRect(0, 0, viewW, viewH);
+            const groundY = viewH - groundHeight;
+
+            ctx.fillStyle = '#ffffff';
+            decorClouds.forEach(c => {
+                let cx = c.x - (cameraX * 0.25);
+                ctx.beginPath(); ctx.arc(cx, c.y, 18 * c.scale, 0, Math.PI * 2); ctx.arc(cx + 12, c.y - 8, 22 * c.scale, 0, Math.PI * 2); ctx.arc(cx + 28, c.y, 16 * c.scale, 0, Math.PI * 2); ctx.fill();
+            });
+
+            ctx.fillStyle = 'rgba(85, 102, 82, 0.4)';
+            birds.forEach(b => {
+                let bx = b.x - (cameraX * 0.4); let wingBob = Math.sin(b.wingState) * 5;
+                ctx.beginPath(); ctx.moveTo(bx, b.y); ctx.lineTo(bx - 8, b.y - 4 + wingBob); ctx.lineTo(bx - 4, b.y + 2); ctx.lineTo(bx, b.y + wingBob); ctx.lineTo(bx + 4, b.y + 2); ctx.lineTo(bx + 8, b.y - 4 + wingBob); ctx.closePath(); ctx.fill();
+            });
+
+            ctx.save();
+            ctx.translate(-cameraX, 0);
+
+            solidObjects.forEach(obj => {
+                ctx.fillStyle = obj.color;
+                ctx.fillRect(obj.x, obj.y, obj.w, obj.h);
+                ctx.lineWidth = 3.5; ctx.strokeStyle = varColor('--matcha-dark'); ctx.strokeRect(obj.x, obj.y, obj.w, obj.h);
+
+                ctx.fillStyle = '#ffffff'; ctx.strokeStyle = varColor('--matcha-dark'); ctx.lineWidth = 3;
+
+                if (obj.roofStyle === 'flat-awning') {
+                    ctx.fillStyle = '#e3f2fd'; ctx.fillRect(obj.x + 15, obj.y + obj.h - 85, obj.w - 30, 40); ctx.strokeRect(obj.x + 15, obj.y + obj.h - 85, obj.w - 30, 40);
+                    ctx.fillStyle = '#ffffff'; ctx.fillRect(obj.x + obj.w / 2 - 15, obj.y + obj.h - 42, 30, 42); ctx.strokeRect(obj.x + obj.w / 2 - 15, obj.y + obj.h - 42, 30, 42);
+                    ctx.fillStyle = obj.subColor; ctx.fillRect(obj.x - 4, obj.y, obj.w + 8, 12); ctx.strokeRect(obj.x - 4, obj.y, obj.w + 8, 12);
+                } 
+                else if (obj.roofStyle === 'triangle') {
+                    ctx.fillStyle = '#e3f2fd'; ctx.fillRect(obj.x + 20, obj.y + 35, 25, 35); ctx.strokeRect(obj.x + 20, obj.y + 35, 25, 35);
+                    ctx.fillRect(obj.x + obj.w - 45, obj.y + 35, 25, 35); ctx.strokeRect(obj.x + obj.w - 45, obj.y + 35, 25, 35);
+                    ctx.fillStyle = '#ffffff'; ctx.fillRect(obj.x + 20, obj.y + obj.h - 45, 26, 45); ctx.strokeRect(obj.x + 20, obj.y + obj.h - 45, 26, 45);
+                    ctx.fillStyle = obj.subColor;
+                    ctx.beginPath(); ctx.moveTo(obj.x - 6, obj.y); ctx.lineTo(obj.x + obj.w / 2, obj.y - 35); ctx.lineTo(obj.x + obj.w + 6, obj.y); ctx.closePath(); ctx.fill(); ctx.stroke();
+                } 
+                else if (obj.roofStyle === 'double-tier') {
+                    ctx.fillStyle = '#e3f2fd'; ctx.fillRect(obj.x + 25, obj.y + 30, 30, 30); ctx.strokeRect(obj.x + 25, obj.y + 30, 30, 30);
+                    ctx.fillStyle = '#ffffff'; ctx.fillRect(obj.x + obj.w - 50, obj.y + obj.h - 50, 28, 50); ctx.strokeRect(obj.x + obj.w - 50, obj.y + obj.h - 50, 28, 50);
+                    ctx.fillStyle = obj.subColor;
+                    ctx.fillRect(obj.x - 4, obj.y + 12, obj.w + 8, 10); ctx.strokeRect(obj.x - 4, obj.y + 12, obj.w + 8, 10);
+                    ctx.fillRect(obj.x + 12, obj.y, obj.w - 24, 12); ctx.strokeRect(obj.x + 12, obj.y, obj.w - 24, 12);
+                }
+            });
+
+            streetProps.forEach(prop => {
+                ctx.lineWidth = 3; ctx.strokeStyle = varColor('--matcha-dark');
+                if (prop.type === 'lamp') {
+                    ctx.fillStyle = '#556652'; ctx.fillRect(prop.x, groundY - 70, 4, 70);
+                    ctx.fillStyle = '#fff9db'; ctx.beginPath(); ctx.arc(prop.x + 2, groundY - 74, 8, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+                } 
+                else if (prop.type === 'bench') {
+                    ctx.fillStyle = '#d7ccc8'; ctx.fillRect(prop.x, groundY - 18, 32, 10); ctx.strokeRect(prop.x, groundY - 18, 32, 10);
+                    ctx.fillStyle = '#556652'; ctx.fillRect(prop.x + 4, groundY - 8, 4, 8); ctx.fillRect(prop.x + 24, groundY - 8, 4, 8);
+                } 
+                else if (prop.type === 'plant') {
+                    ctx.fillStyle = '#bcaaa4'; ctx.fillRect(prop.x, groundY - 14, 16, 14); ctx.strokeRect(prop.x, groundY - 14, 16, 14);
+                    ctx.fillStyle = '#8fa886'; ctx.beginPath(); ctx.arc(prop.x + 8, groundY - 22, 12, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+                }
+                else if (prop.type === 'tree') {
+                    ctx.fillStyle = '#a1887f';
+                    let th = prop.variant === 'big' ? 45 : 30; let tr = prop.variant === 'big' ? 24 : 16;
+                    ctx.fillRect(prop.x + 6, groundY - th, 6, th);
+                    ctx.fillStyle = prop.variant === 'big' ? '#c5e1a5' : '#a5d6a7';
+                    ctx.beginPath(); ctx.arc(prop.x + 9, groundY - th - 5, tr, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+                }
+            });
+
+            ctx.fillStyle = varColor('--matcha-green');
+            ctx.fillRect(0, groundY, mapRightBoundary, groundHeight);
+            ctx.beginPath(); ctx.strokeStyle = varColor('--matcha-dark'); ctx.lineWidth = 4;
+            ctx.moveTo(0, groundY); ctx.lineTo(mapRightBoundary, groundY); ctx.stroke();
+
+            ctx.save();
+            ctx.translate(cat.x + cat.width / 2, cat.y + cat.height);
+            if (cat.facing === 'left') ctx.scale(-1, 1);
+
+            let catBob = cat.vx !== 0 ? Math.abs(Math.sin(cat.animCycle)) * 2.5 : 0;
+            ctx.lineWidth = 2.5; ctx.strokeStyle = varColor('--matcha-dark');
+
+            ctx.fillStyle = '#e0e0e0';
+            ctx.beginPath(); ctx.moveTo(-6, -6 - catBob); ctx.quadraticCurveTo(-12, -18 - catBob, -7, -24 - catBob); ctx.lineTo(-4, -23 - catBob); ctx.quadraticCurveTo(-8, -15 - catBob, -3, -6 - catBob); ctx.stroke();
+
+            ctx.fillStyle = '#ffffff'; ctx.beginPath(); ctx.roundRect(-12, -13 - catBob, 20, 13, 3); ctx.fill(); ctx.stroke();
+            ctx.beginPath(); ctx.arc(7, -15 - catBob, 7, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+
+            ctx.fillStyle = '#ffffff';
+            ctx.beginPath(); ctx.moveTo(2, -20 - catBob); ctx.lineTo(1, -26 - catBob); ctx.lineTo(6, -21 - catBob); ctx.fill(); ctx.stroke();
+            ctx.beginPath(); ctx.moveTo(7, -21 - catBob); ctx.lineTo(11, -26 - catBob); ctx.lineTo(12, -20 - catBob); ctx.fill(); ctx.stroke();
+
+            ctx.fillStyle = '#ffcad4';
+            ctx.beginPath(); ctx.moveTo(2, -21 - catBob); ctx.lineTo(2, -24 - catBob); ctx.lineTo(5, -21 - catBob); ctx.fill();
+            ctx.beginPath(); ctx.moveTo(8, -21 - catBob); ctx.lineTo(10, -24 - catBob); ctx.lineTo(11, -21 - catBob); ctx.fill();
+
+            ctx.fillStyle = '#1a1c19';
+            ctx.beginPath(); ctx.arc(5, -16 - catBob, 1.2, 0, Math.PI*2); ctx.arc(9, -16 - catBob, 1.2, 0, Math.PI*2); ctx.fill();
+            
+            ctx.strokeStyle = 'rgba(68, 82, 65, 0.6)'; ctx.lineWidth = 1.5;
+            ctx.beginPath(); ctx.moveTo(11, -15 - catBob); ctx.lineTo(16, -14 - catBob); ctx.moveTo(11, -14 - catBob); ctx.lineTo(15, -12 - catBob); ctx.stroke();
+
+            ctx.restore();
+
+            if (cat.showHeart > 0) {
+                ctx.fillStyle = varColor('--strawberry-dark'); ctx.font = "16px sans-serif";
+                ctx.fillText("💖", cat.x + 2, cat.y - 18);
+            }
+
+            ctx.save();
+            ctx.translate(player.x + player.width / 2, player.y + player.height);
+            ctx.scale(player.squishX, player.squishY);
+            if (player.facing === 'left') ctx.scale(-1, 1);
+
+            let bob = player.vx !== 0 ? Math.sin(player.animCycle) * 3 : 0;
+            let hair = !player.isGrounded ? Math.sin(Date.now() * 0.012) * 3.5 : 0;
+
+            ctx.fillStyle = '#6d4c41'; ctx.beginPath(); ctx.roundRect(-10, -48 + bob + hair, 20, 30, [8, 8, 4, 4]); ctx.fill();
+            ctx.fillStyle = '#8fa886'; ctx.beginPath(); ctx.roundRect(-9, -24 + bob, 18, 20, [4, 4, 2, 2]); ctx.fill();
+            ctx.fillStyle = '#ffebd6'; ctx.beginPath(); ctx.arc(0, -38 + bob, 9, 0, Math.PI * 2); ctx.fill();
+            
+            ctx.fillStyle = '#3e2723'; ctx.fillRect(1, -40 + bob, 2.5, 2.5); ctx.fillRect(5, -40 + bob, 2.5, 2.5);
+            ctx.fillStyle = '#ffb3c1'; ctx.beginPath(); ctx.arc(2, -35 + bob, 1.8, 0, Math.PI * 2); ctx.arc(6, -35 + bob, 1.8, 0, Math.PI * 2); ctx.fill();
+            ctx.fillStyle = '#6d4c41'; ctx.beginPath(); ctx.arc(0, -42 + bob, 9.5, Math.PI, 0); ctx.fill();
+
+            ctx.restore();
+            ctx.restore();
+        }
+
+        function varColor(name) { return getComputedStyle(document.documentElement).getPropertyValue(name).trim(); }
+        function runEngine() { updateEngine(); drawScene(); requestAnimationFrame(runEngine); }
+
+        window.addEventListener('load', () => { resizeGame(); runEngine(); });
+        window.addEventListener('resize', resizeGame);
+    </script>
+</body>
+</html>
